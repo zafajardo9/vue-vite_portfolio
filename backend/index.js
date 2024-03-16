@@ -4,9 +4,20 @@ import dotenv from "dotenv";
 import ImageKit from 'imagekit';
 import cors from "cors";
 import { v4 as uuidv4 } from 'uuid';
+
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
+import path from 'path';
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET
+// });
+
+
+
 // Create an Express app
 const app = express();
-import multer from 'multer';
 
 // Multer storage configuration
 const storage = multer.diskStorage({
@@ -37,13 +48,19 @@ const PORT = process.env.PORT || 7000;
 
 // Get the MongoDB connection URL from environment variables
 const MONGOURL = process.env.CONNECTION_STRING;
+import fs from 'fs';
 
+cloudinary.config({
+  cloud_name: 'dyve0ia45',
+  api_key: '412939731254574',
+  api_secret: 'HQ7IYJyIeAmU-45b0Rdnl8qvuX0'
+});
 
 
 var imagekit = new ImageKit({
-    publicKey : "public_Bb332HH34jVflMqkdCBBeMCmlSE=",
-    privateKey : "private_N9Vnw5/36orITy9TnlVou6Pn7z4=",
-    urlEndpoint : "https://ik.imagekit.io/23umzxu6uw"
+  publicKey: process.env.IMAGEKIT_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATEKEY,
+  urlEndpoint: process.env.IMAGEKIT_URL
 });
 
 // Connect to MongoDB and start the server
@@ -67,15 +84,35 @@ const PortfolioModel = mongoose.model("portfolio", portfolioSchema);
 app.post("/portfolio", upload.single('imageUrl'), async (req, res) => {
   try {
     const { title, description } = req.body;
-    const fileBuffer = req.file.buffer;
 
-    // Upload file to ImageKit
+    //FOR IMAGEKIT
+    const fileBuffer = req.file.buffer;
     const imageUploadResponse = await imagekit.upload({
       file: fileBuffer,
-      fileName: req.file.originalname, // Use the original file name for ImageKit
-      tags: ['portfolio'], // Optional: Add tags for organization
+      fileName: req.file.originalname,
+      tags: ['portfolio'],
     });
 
+    const tempDir = './temp';
+    const publicId = `${"portfolio"}_${Date.now()}`;
+    const fileExtension = req.file.originalname.split('.').pop();
+    const tempFilePath = path.join(tempDir, `${publicId}.${fileExtension}`); // Define the temporary file path
+
+    // Create the temp directory if it doesn't exist
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+
+    // Write buffer to the file
+    fs.writeFileSync(tempFilePath, fileBuffer);
+    //ImageKit
+
+
+    //Cloudionary
+    cloudinary.uploader.upload(tempFilePath,
+      { public_id: publicId, overwrite: true },
+      function (error, result) { console.log(result); }
+    );
     // Extract image URL from ImageKit response
     const imageUrl = imageUploadResponse.url;
 
@@ -84,7 +121,7 @@ app.post("/portfolio", upload.single('imageUrl'), async (req, res) => {
 
     // Save portfolio item to database
     const savedPortfolioItem = await portfolioItem.save();
-    
+
     // Send the saved portfolio item as response
     res.json(savedPortfolioItem);
   } catch (error) {
