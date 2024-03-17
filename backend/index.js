@@ -3,23 +3,16 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import ImageKit from 'imagekit';
 import cors from "cors";
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import path from 'path';
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET
-// });
 
 
-
-// Create an Express app
 const app = express();
 
-// Multer storage configuration
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, '/uploads')
@@ -40,20 +33,17 @@ dotenv.config();
 
 app.use(cors());
 
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Set the port from environment variables or default to 7000
 const PORT = process.env.PORT || 7000;
 
-// Get the MongoDB connection URL from environment variables
 const MONGOURL = process.env.CONNECTION_STRING;
 import fs from 'fs';
 
 cloudinary.config({
-  cloud_name: 'dyve0ia45',
-  api_key: '412939731254574',
-  api_secret: 'HQ7IYJyIeAmU-45b0Rdnl8qvuX0'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 

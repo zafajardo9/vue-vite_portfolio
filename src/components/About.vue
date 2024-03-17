@@ -20,9 +20,9 @@ defineProps<{ firstP: string, secondP: string }>()
             </div>
             <div class="grid grid-cols-2 gap-4 md:gap-8">
                 <img src="../assets/2.jpg" alt="Image 1" class="rounded-lg shadow-md" loading="lazy">
-                <img src="../assets/3.jpg" alt="Image 2" class="rounded-lg shadow-md">
-                <img src="../assets/4.jpg" alt="Image 3" class="rounded-lg shadow-md">
-                <img src="../assets/5.jpg" alt="Image 4" class="rounded-lg shadow-md">
+                <img src="../assets/3.jpg" alt="Image 2" class="rounded-lg shadow-md" loading="lazy">
+                <img src="../assets/4.jpg" alt="Image 3" class="rounded-lg shadow-md" loading="lazy">
+                <img src="../assets/5.jpg" alt="Image 4" class="rounded-lg shadow-md" loading="lazy">
             </div>
         </div>
     </div>

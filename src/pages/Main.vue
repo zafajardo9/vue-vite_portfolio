@@ -9,7 +9,7 @@ import Footer from '../components/Footer.vue';
 
 <template>
 
-    <HelloWorld msg="Name.AAAA" />
+    <HelloWorld msg="Angela Camille Adison" />
     <Experiences />
     <About firstP="I am asdfasdf from adsfadsf" secondP="I am a UI/UX Designer" />
     <Contact />

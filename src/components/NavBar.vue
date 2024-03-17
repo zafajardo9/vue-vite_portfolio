@@ -18,7 +18,10 @@
     <nav class="w-full bg-gray-800 p-4 top-0 left-0 fixed">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center">
-                <h1 class="text-white text-lg font-semibold">Portfolio</h1>
+                <a @click="$router.push('/')" class="cursor-pointer">
+                    <h1 class="text-white text-lg font-semibold">Portfolio</h1>
+                </a>
+
             </div>
             <div class="hidden md:block">
                 <div class="flex items-center space-x-4"> <!-- Added items-center -->
