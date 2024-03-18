@@ -143,9 +143,44 @@ app.get("/portfolio/:id", async (req, res) => {
 });
 
 // Update a portfolio item
-app.put("/portfolio/:id", async (req, res) => {
+app.put("/portfolio/:id", upload.single('imageUrl'), async (req, res) => {
   try {
-    const { title, description, imageUrl } = req.body;
+
+
+    const { title, description } = req.body;
+
+    //FOR IMAGEKIT
+    const fileBuffer = req.file.buffer;
+    const imageUploadResponse = await imagekit.upload({
+      file: fileBuffer,
+      fileName: req.file.originalname,
+      tags: ['portfolio'],
+    });
+
+    const tempDir = './temp';
+    const publicId = `${"portfolio"}_${Date.now()}`;
+    const fileExtension = req.file.originalname.split('.').pop();
+    const tempFilePath = path.join(tempDir, `${publicId}.${fileExtension}`); // Define the temporary file path
+
+    // Create the temp directory if it doesn't exist
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+
+    // Write buffer to the file
+    fs.writeFileSync(tempFilePath, fileBuffer);
+    //ImageKit
+
+
+    //Cloudionary
+    cloudinary.uploader.upload(tempFilePath,
+      { public_id: publicId, overwrite: true },
+      function (error, result) { console.log(result); }
+    );
+    // Extract image URL from ImageKit response
+    const imageUrl = imageUploadResponse.url;
+
+
     const updatedPortfolioItem = await PortfolioModel.findByIdAndUpdate(
       req.params.id,
       { title, description, imageUrl },

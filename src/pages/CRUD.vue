@@ -40,14 +40,71 @@
                             <img :src="item.imageUrl" alt="" style="max-width: 100px; max-height: 100px;">
                         </td>
                         <td class="border border-gray-300 px-4 py-2 text-center space-x-3">
-                            <button @click="" disabled class="bg-gray-600 text-white px-4 py-2">Edit</button>
+                            <button @click="openModal(item._id)" class="bg-gray-600 text-white px-4 py-2">Edit</button>
                             <button @click="deletePortfolioItem(item._id)"
                                 class="bg-red-600 text-white px-4 py-2">Delete</button>
                         </td>
+
+
+
+
+                        <div v-if="isModalOpen"
+                            class="modal fixed z-10 top-0 left-0 w-full h-full flex items-center justify-center">
+                            <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+
+                            <div
+                                class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+                                <!-- Close button -->
+                                <div
+                                    class="modal-close absolute top-0 right-0 cursor-pointer size-10 rounded-full flex justify-center bg-red-800 items-center mt-4 mr-4 text-white text-xl z-50">
+                                    <span @click="closeModal" class="fill-current">&times;</span>
+                                </div>
+
+                                <!-- Modal content -->
+                                <div class="modal-content py-4 text-left px-6">
+                                    <h2 class="text-2xl font-bold mb-4">Edit Item {{ item._id }}</h2>
+                                    <form @submit.prevent="updatePortfolioItem(item._id)" enctype="multipart/form-data">
+
+                                        <!-- Input fields -->
+                                        <div class="mb-4">
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+                                            <input v-model="newPortfolio.title"
+                                                class="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                type="text" required>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label
+                                                class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                                            <input v-model="newPortfolio.description"
+                                                class="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                type="text">
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">File:</label>
+                                            <input class="mx-2 text-white" type="file" name="imageUrl"
+                                                ref="imageUrlInput" accept="image/jpeg, image/png"
+                                                @change="handleImageChange" />
+                                        </div>
+
+                                        <div class="flex justify-end">
+                                            <button type="submit"
+                                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
                     </tr>
+
+
+
                 </tbody>
             </table>
         </div>
+
+
 
     </div>
 </template>
@@ -65,6 +122,7 @@ interface PortfolioItem {
     imageUrl: string;
 }
 
+
 export default defineComponent({
     setup() {
         const newPortfolio: Ref<{
@@ -77,7 +135,21 @@ export default defineComponent({
             imageUrl: null
         });
 
+
+
+        const openModal = (itemId: string, itemData?: PortfolioItem) => {
+            isModalOpen.value = true;
+            console.log(itemId, itemData);
+        };
+
+        const closeModal = () => {
+            isModalOpen.value = false;
+        };
+
+
+
         const portfolioItems = ref<PortfolioItem[]>([]);
+        const isModalOpen = ref(false);
 
         const fetchPortfolioItems = async () => {
             try {
@@ -93,7 +165,7 @@ export default defineComponent({
                 const formData = new FormData();
                 formData.append('title', newPortfolio.value.title);
                 formData.append('description', newPortfolio.value.description);
-                formData.append('imageUrl', newPortfolio.value.imageUrl as Blob); // Cast to Blob
+                formData.append('imageUrl', newPortfolio.value.imageUrl as Blob);
 
 
                 const response = await axios.post<PortfolioItem>(`${apiUrl}/portfolio`, formData, {
@@ -105,7 +177,7 @@ export default defineComponent({
                 portfolioItems.value.push(response.data);
                 newPortfolio.value.title = '';
                 newPortfolio.value.description = '';
-                // Don't need to reset imageUrl as it's a ref
+                newPortfolio.value.imageUrl = null;
             } catch (error) {
                 console.error('Error adding portfolio item:', error);
             }
@@ -120,8 +192,51 @@ export default defineComponent({
             }
         };
 
+        //di naman need
+        const startEdit = async (id: string) => {
+            try {
+                const response = await axios.get<PortfolioItem>(`${apiUrl}/portfolio/${id}`);
+                const itemToEdit = response.data;
+
+                // Open the modal with the item's data and ID
+                openModal(id, itemToEdit);
+            } catch (error) {
+                console.error('Error fetching item to edit:', error);
+            }
+        };
+
+        const updatePortfolioItem = async (id: string) => {
+            try {
+                const formData = new FormData();
+                formData.append('title', newPortfolio.value.title);
+                formData.append('description', newPortfolio.value.description);
+                formData.append('imageUrl', newPortfolio.value.imageUrl as Blob);
+
+                const response = await axios.put<PortfolioItem>(`${apiUrl}/portfolio/${id}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                // di naman
+                const index = portfolioItems.value.findIndex(item => item._id === id);
+                if (index !== -1) {
+                    // Replace the item at the found index with the updated item
+                    portfolioItems.value.splice(index, 1, response.data);
+                }
+
+                //pang clear
+                newPortfolio.value.title = '';
+                newPortfolio.value.description = '';
+                newPortfolio.value.imageUrl = null;
+                closeModal();
+            } catch (error) {
+                console.error('Error updating portfolio item:', error);
+            }
+        };
 
 
+        // Handle image change function
         const handleImageChange = (event: Event) => {
             const target = event.target as HTMLInputElement;
             if (target.files && target.files.length) {
@@ -136,10 +251,20 @@ export default defineComponent({
             portfolioItems,
             addPortfolioItem,
             deletePortfolioItem,
-            handleImageChange
+            handleImageChange,
+
+            startEdit,
+            updatePortfolioItem,
+            openModal,
+            closeModal,
+            isModalOpen,
         };
     }
 });
+
+
+
+
 </script>
 
 <style scoped></style>
